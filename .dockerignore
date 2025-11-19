@@ -1,0 +1,10 @@
+.github
+.idea
+.pytest_cache
+.mypy_cache
+tests
+.venv
+tmp
+.git
+**/__pycache__
+**/*.pyc

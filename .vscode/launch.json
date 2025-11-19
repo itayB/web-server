@@ -1,0 +1,15 @@
+{
+  "configurations": [
+    {
+      "name": "Web Server",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "web_server",
+      "env": {
+        "LOG_SEVERITY": "INFO"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ]
+}
