@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from web_server.handlers.example_handler import ExampleHandler
+from web_server.routers.operation_room import router as operation_room_router
 from web_server.routers.health import router as health_router
 from web_server.routers.example import router as example_router
 from web_server.settings import Settings
@@ -43,6 +44,7 @@ def create_app(settings: Settings) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.include_router(operation_room_router)
     app.include_router(health_router)
     app.include_router(example_router)
 
