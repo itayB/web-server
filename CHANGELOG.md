@@ -6,6 +6,11 @@
 
   The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## <small>1.0.5 (2025-11-20)</small>
+
+* Merge pull request #11 from itayB/docker ([541a2b0](https://github.com/itayB/web-server/commit/541a2b0)), closes [#11](https://github.com/itayB/web-server/issues/11)
+* fix(docker): build ([2dd93e5](https://github.com/itayB/web-server/commit/2dd93e5))
+
 ## <small>1.0.4 (2025-11-20)</small>
 
 * Merge pull request #10 from itayB/tests ([2409080](https://github.com/itayB/web-server/commit/2409080)), closes [#10](https://github.com/itayB/web-server/issues/10)
