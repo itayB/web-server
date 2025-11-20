@@ -5,7 +5,7 @@ from typing_extensions import TypedDict
 
 class OperationRegistrationStruct(TypedDict):
     room_id: int
-    estimated_time: str  # ISO format datetime string
+    scheduled_time: str  # ISO format datetime string
 
 
 class OperationRequestStruct(TypedDict):

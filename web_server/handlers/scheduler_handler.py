@@ -55,7 +55,7 @@ class SchedulerHandler:
                 room, start_time = result
                 scheduled_response: OperationRegistrationStruct = {
                     "room_id": room.id,
-                    "estimated_time": start_time.isoformat(),
+                    "scheduled_time": start_time.isoformat(),
                 }
                 logger.info(
                     f"Doctor {doctor_id} scheduled in room {room.id} at {start_time}"
