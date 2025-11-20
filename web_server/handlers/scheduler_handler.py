@@ -53,9 +53,13 @@ class SchedulerHandler:
                 return queue_response
             else:
                 room, start_time = result
+                estimated_hours = self.scheduler_service.get_surgery_duration(
+                    cast(SURGERY_TYPE, specialty), room
+                )
                 scheduled_response: OperationRegistrationStruct = {
                     "room_id": room.id,
                     "scheduled_time": start_time.isoformat(),
+                    "estimated_time": estimated_hours,
                 }
                 logger.info(
                     f"Doctor {doctor_id} scheduled in room {room.id} at {start_time}"
