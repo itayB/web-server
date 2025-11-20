@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uuid
 from datetime import datetime, timedelta
@@ -296,3 +297,26 @@ class SchedulerService:
         else:
             # No slots available, add to queue
             return self.add_to_queue(doctor_id, surgery_type)
+
+
+async def periodic_queue_processor(
+    scheduler_service: SchedulerService, interval_seconds: int
+) -> None:
+    logger.info(f"Starting background queue processor (interval: {interval_seconds}s)")
+
+    while True:
+        try:
+            if len(scheduler_service.operation_queue) > 0:
+                result = scheduler_service.process_queue()
+                if result:
+                    logger.info(
+                        f"Background queue processing: scheduled {len(result):,} operations, "
+                        f"{len(scheduler_service.operation_queue):,} remain in queue"
+                    )
+            logger.info("Background queue processor sleeping...")
+            await asyncio.sleep(interval_seconds)
+        except asyncio.CancelledError:
+            logger.info("Queue processor shutting down gracefully")
+            raise
+        except Exception:
+            logger.exception("Error in background queue processor")

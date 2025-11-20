@@ -27,7 +27,7 @@ class SchedulerHandler:
         self.settings = settings
         self.doctor_service = doctor_service
         self.scheduler_service = scheduler_service
-        logger.info("scheduler handler init successfully")
+        logger.info("Scheduler handler init successfully")
 
     def request_operation(
         self, doctor_id: str
