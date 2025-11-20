@@ -30,10 +30,4 @@ async def post_register(
     scheduler_handler: Annotated[SchedulerHandler, Depends(get_scheduler_handler)],
     body: OperationRegistrationBody,
 ) -> OperationRegistrationStruct | OperationRequestStruct:
-    body.doctor_id
-
-    scheduler_handler.schedule(body.doctor_id)
-    return {
-        "room_id": 1,
-        "estimated_time": 2,
-    }
+    return scheduler_handler.request_operation(body.doctor_id)

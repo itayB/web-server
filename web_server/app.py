@@ -10,6 +10,7 @@ from web_server.routers.operation_room import router as operation_room_router
 from web_server.routers.health import router as health_router
 from web_server.routers.example import router as example_router
 from web_server.services.doctor_service import DoctorService
+from web_server.services.scheduler_service import SchedulerService
 from web_server.settings import Settings
 from web_server.routers.health import readiness_event
 
@@ -22,7 +23,10 @@ def create_lifespan(settings: Settings):
         app.state.settings = settings
         app.state.example_handler = ExampleHandler(settings=settings)
         doctor_service = DoctorService(settings=settings)
-        app.state.scheduler_handler = SchedulerHandler(settings, doctor_service)
+        scheduler_service = SchedulerService(settings=settings)
+        app.state.scheduler_handler = SchedulerHandler(
+            settings, doctor_service, scheduler_service
+        )
         readiness_event.set()
         logger.info(f"Starting web server on {settings.host}:{settings.port}...")
         yield
