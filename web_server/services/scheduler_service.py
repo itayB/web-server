@@ -48,19 +48,6 @@ class SchedulerService:
     def settings(self) -> Settings:
         return self._settings
 
-    def get_operating_room(self, room_id: int) -> OperationRoom | None:
-        return self.operating_rooms.get(room_id)
-
-    def get_all_operating_rooms(self) -> list[OperationRoom]:
-        return list(self.operating_rooms.values())
-
-    def get_rooms_with_machine(self, machine: str) -> list[OperationRoom]:
-        return [
-            room
-            for room in self.operating_rooms.values()
-            if room.has_machine(machine)  # type: ignore
-        ]
-
     def get_surgery_requirements(
         self, surgery_type: SURGERY_TYPE
     ) -> SurgeryRequirements:
@@ -227,18 +214,6 @@ class SchedulerService:
         )
 
         return queue_entry
-
-    def get_queue_position(self, request_id: str) -> int | None:
-        for idx, entry in enumerate(self.operation_queue, start=1):
-            if entry.request_id == request_id:
-                return idx
-        return None
-
-    def get_queue_entry(self, request_id: str) -> QueueEntry | None:
-        for entry in self.operation_queue:
-            if entry.request_id == request_id:
-                return entry
-        return None
 
     def process_queue(self) -> list[tuple[QueueEntry, OperationRoom, datetime]]:
         """Process the queue and schedule any requests that now have available slots.
