@@ -1,8 +1,10 @@
 import logging
+import uuid
 from datetime import datetime, timedelta
 
 from web_server.models import (
     OperationRoom,
+    QueueEntry,
     ScheduledOperation,
     SurgeryRequirements,
     HEART_SURGERY_REQUIREMENTS,
@@ -33,6 +35,8 @@ class SchedulerService:
         }
         # Store scheduled operations
         self.scheduled_operations: list[ScheduledOperation] = []
+        # Queue for requests when no slots available
+        self.operation_queue: list[QueueEntry] = []
         # Working hours configuration
         self.work_start_hour = 10  # 10:00
         self.work_end_hour = 18  # 18:00
@@ -201,3 +205,94 @@ class SchedulerService:
         )
 
         return best_slot
+
+    def add_to_queue(self, doctor_id: str, surgery_type: SURGERY_TYPE) -> QueueEntry:
+        # Add a request to the queue (when no slots are available).
+        request_id = str(uuid.uuid4())
+        queue_position = len(self.operation_queue) + 1
+
+        queue_entry = QueueEntry(
+            request_id=request_id,
+            doctor_id=doctor_id,
+            surgery_type=surgery_type,
+            timestamp=datetime.now(),
+            queue_position=queue_position,
+        )
+
+        self.operation_queue.append(queue_entry)
+        logger.info(
+            f"Added {surgery_type} surgery request for doctor {doctor_id} to queue "
+            f"at position {queue_position} (request_id: {request_id})"
+        )
+
+        return queue_entry
+
+    def get_queue_position(self, request_id: str) -> int | None:
+        for idx, entry in enumerate(self.operation_queue, start=1):
+            if entry.request_id == request_id:
+                return idx
+        return None
+
+    def get_queue_entry(self, request_id: str) -> QueueEntry | None:
+        for entry in self.operation_queue:
+            if entry.request_id == request_id:
+                return entry
+        return None
+
+    def process_queue(self) -> list[tuple[QueueEntry, OperationRoom, datetime]]:
+        """Process the queue and schedule any requests that now have available slots.
+
+        Returns a list of tuples containing (queue_entry, room, start_time) for successfully scheduled operations.
+        This can be called lazily on new requests or periodically by a background scheduler.
+        """
+        scheduled_from_queue: list[tuple[QueueEntry, OperationRoom, datetime]] = []
+        remaining_queue: list[QueueEntry] = []
+
+        for entry in self.operation_queue:
+            # Try to schedule this queued request
+            result = self.schedule_operation(entry.doctor_id, entry.surgery_type)
+
+            if result is not None:
+                room, start_time = result
+                scheduled_from_queue.append((entry, room, start_time))
+                logger.info(
+                    f"Dequeued and scheduled request {entry.request_id} for doctor {entry.doctor_id} "
+                    f"in room {room.id} at {start_time}"
+                )
+            else:
+                # Still no slot available, keep in queue
+                remaining_queue.append(entry)
+
+        # Update queue with only the remaining entries and recalculate positions
+        self.operation_queue = remaining_queue
+        for idx, entry in enumerate(self.operation_queue, start=1):
+            entry.queue_position = idx
+
+        if scheduled_from_queue:
+            logger.info(
+                f"Processed queue: {len(scheduled_from_queue)} requests scheduled, {len(remaining_queue)} remain"
+            )
+
+        return scheduled_from_queue
+
+    def request_operation(
+        self, doctor_id: str, surgery_type: SURGERY_TYPE
+    ) -> tuple[OperationRoom, datetime] | QueueEntry:
+        """Main entry point: Request an operation slot.
+
+        Returns either:
+        - (room, start_time) if successfully scheduled
+        - QueueEntry if no slots available and added to queue
+        """
+        # First, try to process any pending queue entries (lazy dequeue)
+        self.process_queue()
+
+        # Try to schedule the new request
+        result = self.schedule_operation(doctor_id, surgery_type)
+
+        if result is not None:
+            # Successfully scheduled
+            return result
+        else:
+            # No slots available, add to queue
+            return self.add_to_queue(doctor_id, surgery_type)

@@ -81,3 +81,11 @@ class ScheduledOperation(BaseModel):
         if self.room_id != other.room_id:
             return False
         return self.start_time < other.end_time and other.start_time < self.end_time
+
+
+class QueueEntry(BaseModel):
+    request_id: str
+    doctor_id: str
+    surgery_type: SURGERY_TYPE
+    timestamp: datetime  # Time when the request was made
+    queue_position: int
