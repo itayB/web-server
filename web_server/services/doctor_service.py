@@ -1,6 +1,6 @@
 import logging
 
-from web_server.models import Doctor
+from web_server.models import Doctor, SURGERY_TYPE
 from web_server.settings import Settings
 
 
@@ -32,5 +32,5 @@ class DoctorService:
             raise Exception(f"Doctor with id '{doctor_id}' not found")
         return doctor
 
-    def get_specialty(self, doctor_id: str) -> str:
+    def get_specialty(self, doctor_id: str) -> SURGERY_TYPE:
         return self.get_doctor(doctor_id).specialty

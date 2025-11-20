@@ -1,8 +1,7 @@
 import logging
-from typing import cast
 from fastapi import Request, HTTPException
 
-from web_server.models import QueueEntry, SURGERY_TYPE
+from web_server.models import QueueEntry
 from web_server.services.doctor_service import DoctorService
 from web_server.services.scheduler_service import SchedulerService
 from web_server.settings import Settings
@@ -38,9 +37,7 @@ class SchedulerHandler:
                 f"Doctor {doctor_id} requested operation (specialty: {specialty})"
             )
 
-            result = self.scheduler_service.request_operation(
-                doctor_id, cast(SURGERY_TYPE, specialty)
-            )
+            result = self.scheduler_service.request_operation(doctor_id, specialty)
 
             if isinstance(result, QueueEntry):
                 queue_response: OperationRequestStruct = {
@@ -54,7 +51,7 @@ class SchedulerHandler:
             else:
                 room, start_time = result
                 estimated_hours = self.scheduler_service.get_surgery_duration(
-                    cast(SURGERY_TYPE, specialty), room
+                    specialty, room
                 )
                 scheduled_response: OperationRegistrationStruct = {
                     "room_id": room.id,
