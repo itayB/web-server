@@ -1,4 +1,3 @@
-from datetime import datetime
 from pydantic import BaseModel
 from typing_extensions import TypedDict
 
@@ -6,6 +5,7 @@ from typing_extensions import TypedDict
 class OperationRegistrationStruct(TypedDict):
     room_id: int
     scheduled_time: str  # ISO format datetime string
+    estimated_time: int  # in hours
 
 
 class OperationRequestStruct(TypedDict):
