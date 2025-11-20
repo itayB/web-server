@@ -113,3 +113,14 @@ def test_same_doctor_for_more_than_a_week(client):
     assert len(scheduled_times) == len(
         set(scheduled_times)
     ), "Doctor should not be double-booked at the same time"
+
+
+def test_invalid_doctor_id(client):
+    doctor_id = "non_existent_doctor"
+    response = client.post(
+        "/v1/api/operation-room/register", json={"doctor_id": doctor_id}
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert "detail" in data
+    assert data["detail"] == f"Doctor with id '{doctor_id}' not found"
