@@ -1,4 +1,5 @@
 from typing import Literal
+from datetime import datetime
 from pydantic import BaseModel, model_validator
 
 
@@ -32,6 +33,7 @@ class OperationRoom(BaseModel):
 
 class SurgeryRequirements(BaseModel):
     """Requirements and duration logic for each surgery type."""
+
     surgery_type: SURGERY_TYPE
     required_machines: list[MACHINE_TYPE]
     base_duration_hours: int
@@ -63,3 +65,19 @@ BRAIN_SURGERY_REQUIREMENTS = SurgeryRequirements(
     base_duration_hours=3,
     duration_with_optional_machine={"CT": 2},  # 2 hours with CT, 3 hours without
 )
+
+
+class ScheduledOperation(BaseModel):
+    """Represents a scheduled surgery operation."""
+
+    doctor_id: str
+    room_id: int
+    surgery_type: SURGERY_TYPE
+    start_time: datetime
+    end_time: datetime
+
+    def overlaps_with(self, other: "ScheduledOperation") -> bool:
+        """Check if this operation overlaps with another operation in the same room."""
+        if self.room_id != other.room_id:
+            return False
+        return self.start_time < other.end_time and other.start_time < self.end_time

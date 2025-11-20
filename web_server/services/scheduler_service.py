@@ -1,7 +1,9 @@
 import logging
+from datetime import datetime, timedelta
 
 from web_server.models import (
     OperationRoom,
+    ScheduledOperation,
     SurgeryRequirements,
     HEART_SURGERY_REQUIREMENTS,
     BRAIN_SURGERY_REQUIREMENTS,
@@ -29,6 +31,12 @@ class SchedulerService:
             4: OperationRoom(id=4, machines=["MRI", "ECG"]),
             5: OperationRoom(id=5, machines=["MRI", "ECG"]),
         }
+        # Store scheduled operations
+        self.scheduled_operations: list[ScheduledOperation] = []
+        # Working hours configuration
+        self.work_start_hour = 10  # 10:00
+        self.work_end_hour = 18  # 18:00
+        self.max_schedule_days = 7  # 1 week ahead
         logger.info(f"Initialized {len(self.operating_rooms)} operating rooms")
 
     @property
@@ -48,7 +56,9 @@ class SchedulerService:
             if room.has_machine(machine)  # type: ignore
         ]
 
-    def get_surgery_requirements(self, surgery_type: SURGERY_TYPE) -> SurgeryRequirements:
+    def get_surgery_requirements(
+        self, surgery_type: SURGERY_TYPE
+    ) -> SurgeryRequirements:
         """Get the requirements for a specific surgery type."""
         if surgery_type == "heart":
             return HEART_SURGERY_REQUIREMENTS
@@ -66,7 +76,128 @@ class SchedulerService:
             if requirements.is_room_compatible(room)
         ]
 
-    def get_surgery_duration(self, surgery_type: SURGERY_TYPE, room: OperationRoom) -> int:
+    def get_surgery_duration(
+        self, surgery_type: SURGERY_TYPE, room: OperationRoom
+    ) -> int:
         """Calculate surgery duration for a specific surgery type in a specific room."""
         requirements = self.get_surgery_requirements(surgery_type)
         return requirements.get_duration(room)
+
+    def is_within_working_hours(self, start_time: datetime, end_time: datetime) -> bool:
+        """Check if a time slot is within working hours (10:00-18:00)."""
+        if start_time.hour < self.work_start_hour:
+            return False
+        if end_time.hour > self.work_end_hour:
+            return False
+        if end_time.hour == self.work_end_hour and end_time.minute > 0:
+            return False
+        return True
+
+    def get_room_operations(self, room_id: int) -> list[ScheduledOperation]:
+        """Get all scheduled operations for a specific room."""
+        return [op for op in self.scheduled_operations if op.room_id == room_id]
+
+    def is_room_available(
+        self, room_id: int, start_time: datetime, end_time: datetime
+    ) -> bool:
+        room_operations = self.get_room_operations(room_id)
+        proposed_operation = ScheduledOperation(
+            doctor_id="temp",
+            room_id=room_id,
+            surgery_type="heart",
+            start_time=start_time,
+            end_time=end_time,
+        )
+        return not any(proposed_operation.overlaps_with(op) for op in room_operations)
+
+    def find_next_available_slot(
+        self,
+        room: OperationRoom,
+        surgery_type: SURGERY_TYPE,
+        from_time: datetime | None = None,
+    ) -> datetime | None:
+        """Find the next available time slot for a surgery in a specific room."""
+        if from_time is None:
+            from_time = datetime.now()
+
+        duration_hours = self.get_surgery_duration(surgery_type, room)
+        max_end_date = from_time + timedelta(days=self.max_schedule_days)
+
+        # Start searching from the next possible slot (round up to next hour during working hours)
+        current_time = from_time.replace(minute=0, second=0, microsecond=0)
+        if current_time < from_time:
+            current_time += timedelta(hours=1)
+
+        # Ensure we start at or after work hours
+        if current_time.hour < self.work_start_hour:
+            current_time = current_time.replace(hour=self.work_start_hour)
+        elif current_time.hour >= self.work_end_hour:
+            # Move to next day's start
+            current_time = (current_time + timedelta(days=1)).replace(
+                hour=self.work_start_hour
+            )
+
+        while current_time < max_end_date:
+            end_time = current_time + timedelta(hours=duration_hours)
+
+            # Check if within working hours
+            if self.is_within_working_hours(current_time, end_time):
+                # Check if room is available
+                if self.is_room_available(room.id, current_time, end_time):
+                    return current_time
+
+            # Try next hour
+            current_time += timedelta(hours=1)
+
+            # Skip to next day if we've passed working hours
+            if current_time.hour >= self.work_end_hour:
+                current_time = (current_time + timedelta(days=1)).replace(
+                    hour=self.work_start_hour
+                )
+
+        return None  # No available slot in the next week
+
+    def schedule_operation(
+        self, doctor_id: str, surgery_type: SURGERY_TYPE
+    ) -> tuple[OperationRoom, datetime] | None:
+        compatible_rooms = self.get_compatible_rooms(surgery_type)
+
+        if not compatible_rooms:
+            logger.error(f"No compatible rooms found for surgery type: {surgery_type}")
+            return None
+
+        # Find the earliest available slot across all compatible rooms
+        best_slot: tuple[OperationRoom, datetime] | None = None
+        earliest_time: datetime | None = None
+
+        for room in compatible_rooms:
+            slot_time = self.find_next_available_slot(room, surgery_type)
+            if slot_time and (earliest_time is None or slot_time < earliest_time):
+                earliest_time = slot_time
+                best_slot = (room, slot_time)
+
+        if best_slot is None:
+            logger.warning(
+                f"No available slots in the next {self.max_schedule_days} days"
+            )
+            return None
+
+        # Schedule the operation
+        room, start_time = best_slot
+        duration_hours = self.get_surgery_duration(surgery_type, room)
+        end_time = start_time + timedelta(hours=duration_hours)
+
+        scheduled_op = ScheduledOperation(
+            doctor_id=doctor_id,
+            room_id=room.id,
+            surgery_type=surgery_type,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        self.scheduled_operations.append(scheduled_op)
+        logger.info(
+            f"Scheduled {surgery_type} surgery for doctor {doctor_id} in room {room.id} "
+            f"from {start_time} to {end_time}"
+        )
+
+        return best_slot
