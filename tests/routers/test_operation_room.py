@@ -55,3 +55,61 @@ def test_different_doctors_can_book_overlapping_times(client):
     assert (
         first_scheduled_time == second_scheduled_time
     ), "Doctor should not be scheduled at the same time in two rooms"
+
+
+def test_same_doctor_for_more_than_a_week(client):
+    # Test that scheduling a doctor for all available slots in a week eventually results in a queue.
+    doctor_id = "heart_surgeon_1"
+    scheduled_operations = []
+    queue_response = None
+
+    # Keep requesting operations until we get a queue response
+    # Working hours are 10:00-18:00, heart surgery takes 3 hours
+    # So maximum ~2 operations per day * 7 days = ~14 operations per week
+    max_attempts = 50  # limit to avoid infinite loop
+
+    for i in range(max_attempts):
+        response = client.post(
+            "/v1/api/operation-room/register", json={"doctor_id": doctor_id}
+        )
+        assert (
+            response.status_code == status.HTTP_200_OK
+        ), f"Request {i+1} failed with status {response.status_code}"
+        data = response.json()
+
+        if "queue_number" in data:
+            queue_response = data
+            break
+        else:
+            assert "room_id" in data
+            assert "scheduled_time" in data
+            assert "estimated_time" in data
+            scheduled_operations.append(data)
+
+    # Assert that we eventually got a queue response
+    assert (
+        queue_response is not None
+    ), "Expected to receive a queue response after filling the week"
+
+    # Verify queue response properties
+    assert "queue_number" in queue_response
+    assert "request_id" in queue_response
+    assert queue_response["queue_number"] > 0
+    assert isinstance(queue_response["request_id"], str)
+
+    # Verify we scheduled multiple operations before hitting the queue
+    assert (
+        len(scheduled_operations) > 13
+    ), "Should have scheduled at least one operation before queue"
+
+    # Verify all scheduled operations have valid data
+    scheduled_times = []
+    for op in scheduled_operations:
+        assert op["room_id"] > 0
+        assert op["estimated_time"] == 3  # Heart surgery takes 3 hours
+        scheduled_times.append(op["scheduled_time"])
+
+    # Verify all scheduled times are unique (no double-booking of the same doctor)
+    assert len(scheduled_times) == len(
+        set(scheduled_times)
+    ), "Doctor should not be double-booked at the same time"
