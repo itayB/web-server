@@ -1,12 +1,9 @@
-from asyncio import Event
 from typing import Annotated
 from fastapi import APIRouter, status
 from fastapi.params import Depends
 
 from web_server.handlers.example_handler import ExampleHandler, get_example_handler
 
-
-readiness_event = Event()
 
 router = APIRouter(
     prefix="/v1/api/example",

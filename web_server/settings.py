@@ -15,3 +15,10 @@ class Settings(BaseSettings):
         default=1000,
         description="Minimum response size in bytes to enable gzip compression",
     )
+    # Operating Room Scheduler settings
+    enable_background_queue_processor: bool = Field(
+        default=True, description="Enable background queue processing"
+    )
+    queue_processor_interval_seconds: int = Field(
+        default=60, description="Interval in seconds for background queue processing"
+    )
