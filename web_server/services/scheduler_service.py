@@ -1,6 +1,12 @@
 import logging
 
-from web_server.models import OperationRoom
+from web_server.models import (
+    OperationRoom,
+    SurgeryRequirements,
+    HEART_SURGERY_REQUIREMENTS,
+    BRAIN_SURGERY_REQUIREMENTS,
+    SURGERY_TYPE,
+)
 from web_server.settings import Settings
 
 
@@ -41,3 +47,26 @@ class SchedulerService:
             for room in self.operating_rooms.values()
             if room.has_machine(machine)  # type: ignore
         ]
+
+    def get_surgery_requirements(self, surgery_type: SURGERY_TYPE) -> SurgeryRequirements:
+        """Get the requirements for a specific surgery type."""
+        if surgery_type == "heart":
+            return HEART_SURGERY_REQUIREMENTS
+        elif surgery_type == "brain":
+            return BRAIN_SURGERY_REQUIREMENTS
+        else:
+            raise ValueError(f"Unknown surgery type: {surgery_type}")
+
+    def get_compatible_rooms(self, surgery_type: SURGERY_TYPE) -> list[OperationRoom]:
+        """Get all rooms compatible with a specific surgery type."""
+        requirements = self.get_surgery_requirements(surgery_type)
+        return [
+            room
+            for room in self.operating_rooms.values()
+            if requirements.is_room_compatible(room)
+        ]
+
+    def get_surgery_duration(self, surgery_type: SURGERY_TYPE, room: OperationRoom) -> int:
+        """Calculate surgery duration for a specific surgery type in a specific room."""
+        requirements = self.get_surgery_requirements(surgery_type)
+        return requirements.get_duration(room)

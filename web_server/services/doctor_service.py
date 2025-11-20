@@ -25,9 +25,12 @@ class DoctorService:
         }
         logger.info("doctor service init successfully")
 
-    def get_specialty(self, doctor_id: str) -> str:
+    def get_doctor(self, doctor_id: str) -> Doctor:
         doctor = self.db.get(doctor_id)
         if doctor is None:
             logger.warning(f"Doctor with id '{doctor_id}' not found")
             raise Exception(f"Doctor with id '{doctor_id}' not found")
-        return doctor.specialty
+        return doctor
+
+    def get_specialty(self, doctor_id: str) -> str:
+        return self.get_doctor(doctor_id).specialty
