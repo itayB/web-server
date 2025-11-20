@@ -4,7 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from web_server.handlers.example_handler import ExampleHandler
 from web_server.routers.health import router as health_router
+from web_server.routers.example import router as example_router
 from web_server.settings import Settings
 from web_server.routers.health import readiness_event
 
@@ -15,6 +17,7 @@ def create_lifespan(settings: Settings):
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         app.state.settings = settings
+        app.state.example_handler = ExampleHandler(settings=settings)
         readiness_event.set()
         logger.info(f"Starting web server on {settings.host}:{settings.port}...")
         yield
@@ -41,4 +44,6 @@ def create_app(settings: Settings) -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(health_router)
+    app.include_router(example_router)
+
     return app
