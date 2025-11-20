@@ -1,13 +1,4 @@
-import pytest
 from datetime import timedelta
-from web_server.services.scheduler_service import SchedulerService
-from web_server.settings import Settings
-
-
-@pytest.fixture
-def scheduler_service():
-    settings = Settings()
-    return SchedulerService(settings)
 
 
 def test_doctor_cannot_have_overlapping_operations(scheduler_service):
