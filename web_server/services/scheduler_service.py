@@ -89,6 +89,10 @@ class SchedulerService:
         """Get all scheduled operations for a specific room."""
         return [op for op in self.scheduled_operations if op.room_id == room_id]
 
+    def get_doctor_operations(self, doctor_id: str) -> list[ScheduledOperation]:
+        """Get all scheduled operations for a specific doctor."""
+        return [op for op in self.scheduled_operations if op.doctor_id == doctor_id]
+
     def is_room_available(
         self, room_id: int, start_time: datetime, end_time: datetime
     ) -> bool:
@@ -102,13 +106,28 @@ class SchedulerService:
         )
         return not any(proposed_operation.overlaps_with(op) for op in room_operations)
 
+    def is_doctor_available(
+        self, doctor_id: str, start_time: datetime, end_time: datetime
+    ) -> bool:
+        """Check if a doctor is available (not already scheduled) during a time slot."""
+        doctor_operations = self.get_doctor_operations(doctor_id)
+        # Check if the proposed time slot overlaps with any of the doctor's existing operations
+        for op in doctor_operations:
+            if start_time < op.end_time and op.start_time < end_time:
+                return False
+        return True
+
     def find_next_available_slot(
         self,
         room: OperationRoom,
         surgery_type: SURGERY_TYPE,
+        doctor_id: str | None = None,
         from_time: datetime | None = None,
     ) -> datetime | None:
-        """Find the next available time slot for a surgery in a specific room."""
+        """Find the next available time slot for a surgery in a specific room.
+
+        If doctor_id is provided, also ensures the doctor is available at that time.
+        """
         if from_time is None:
             from_time = datetime.now()
 
@@ -136,7 +155,11 @@ class SchedulerService:
             if self.is_within_working_hours(current_time, end_time):
                 # Check if room is available
                 if self.is_room_available(room.id, current_time, end_time):
-                    return current_time
+                    # Also check if doctor is available (if doctor_id provided)
+                    if doctor_id is None or self.is_doctor_available(
+                        doctor_id, current_time, end_time
+                    ):
+                        return current_time
 
             # Try next hour
             current_time += timedelta(hours=1)
@@ -163,7 +186,7 @@ class SchedulerService:
         earliest_time: datetime | None = None
 
         for room in compatible_rooms:
-            slot_time = self.find_next_available_slot(room, surgery_type)
+            slot_time = self.find_next_available_slot(room, surgery_type, doctor_id)
             if slot_time and (earliest_time is None or slot_time < earliest_time):
                 earliest_time = slot_time
                 best_slot = (room, slot_time)
