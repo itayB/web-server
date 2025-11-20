@@ -21,7 +21,7 @@ class DoctorService:
             for i in range(1, 3)
         } | {
             f"brain_surgeon_{i}": Doctor(id=i, name=f"Doctor {i}", specialty="brain")
-            for i in range(4, 6)
+            for i in range(1, 3)
         }
         logger.info("doctor service init successfully")
 
