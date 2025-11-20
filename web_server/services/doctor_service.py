@@ -24,5 +24,6 @@ class DoctorService:
         }
 
     def get_specialty(self, doctor_id: str) -> str:
-        # TODO: handle non existing doctor_id
+        if doctor_id not in self.db:
+            raise KeyError(f"Doctor with id '{doctor_id}' not found")
         return self.db[doctor_id].specialty
