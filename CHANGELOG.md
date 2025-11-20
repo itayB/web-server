@@ -6,6 +6,18 @@
 
   The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## <small>1.0.4 (2025-11-20)</small>
+
+* Merge pull request #10 from itayB/tests ([2409080](https://github.com/itayB/web-server/commit/2409080)), closes [#10](https://github.com/itayB/web-server/issues/10)
+* Merge pull request #8 from itayB/cleanup ([9f639dc](https://github.com/itayB/web-server/commit/9f639dc)), closes [#8](https://github.com/itayB/web-server/issues/8)
+* Merge pull request #9 from itayB/cleanup1 ([00f5cef](https://github.com/itayB/web-server/commit/00f5cef)), closes [#9](https://github.com/itayB/web-server/issues/9)
+* fix(api): estimated duration ([754bc8d](https://github.com/itayB/web-server/commit/754bc8d))
+* fix(cleanup): unused functions/methods ([d2eb375](https://github.com/itayB/web-server/commit/d2eb375))
+* fix(tests): doctor cannot book for same time ([123d16b](https://github.com/itayB/web-server/commit/123d16b))
+* fix(tests): eventually get into queue ([40d7212](https://github.com/itayB/web-server/commit/40d7212))
+* fix(tests): register flow tests ([378d391](https://github.com/itayB/web-server/commit/378d391))
+* fix(types): remove casting ([cda064b](https://github.com/itayB/web-server/commit/cda064b))
+
 ## <small>1.0.3 (2025-11-20)</small>
 
 * Merge pull request #7 from itayB/or ([f53ca6e](https://github.com/itayB/web-server/commit/f53ca6e)), closes [#7](https://github.com/itayB/web-server/issues/7)
