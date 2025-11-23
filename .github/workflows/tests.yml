@@ -34,12 +34,8 @@ jobs:
           ${{ runner.os }}-uv-
 
     - name: Install project dependencies
-      run: |
-        cd test-api
-        uv pip install -e .[dev] --no-cache --system
+      run: uv pip install -e ".[dev]" --no-cache --system
 
     - name: Run_Tests
       shell: script -q -e -c "bash --noprofile --norc -eo pipefail {0}"
-      run: |
-        cd test-api
-        py.test -o junit_family=xunit2 --junitxml result.xml -xv --ff --cov=web_server --cov-report=xml --cov-report=term-missing tests
+      run: py.test -o junit_family=xunit2 --junitxml result.xml -xv --ff --cov=web_server --cov-report=xml --cov-report=term-missing tests

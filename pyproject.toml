@@ -23,3 +23,15 @@ dev = [
   "pytest-cov==7.0.0",
   "pytest-mock==3.15.1",
 ]
+
+[tool.setuptools]
+packages = ["web_server"]
+
+[build-system]
+requires = ["setuptools>=75.8", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+markers = [
+    "settings: Provide custom Settings instance for the test client",
+]
