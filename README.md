@@ -21,6 +21,12 @@ uv pip install -e ".[dev]"
 python -m web_server
 ```
 
+## Running with Docker
+
+```bash
+docker run -p 8080:8080 itayb/web-server:latest
+```
+
 ## Contribution
 
 ```bash

@@ -7,7 +7,7 @@ readiness_event = Event()
 
 router = APIRouter(
     prefix="/v1/api/health-check",
-    tags=["Health Check"],
+    tags=["health-check"],
 )
 
 
@@ -31,5 +31,8 @@ async def liveness() -> ReturnHealthCheckStruct:
 )
 async def readiness() -> ReturnHealthCheckStruct:
     if not readiness_event.is_set():
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="server is not ready")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="server is not ready",
+        )
     return {"status": "success"}
