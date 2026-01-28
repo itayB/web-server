@@ -22,7 +22,7 @@ jobs:
       run: |
         curl -LsSf https://astral.sh/uv/install.sh | sh
         echo "$HOME/.local/bin" >> $GITHUB_PATH
-    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548   # v5
+    - uses: actions/setup-python@v6.2.0
       with:
         python-version: '3.14'
     - name: Cache uv dependencies
